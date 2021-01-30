@@ -65,3 +65,16 @@ func _rev(a, p, q *big.Int) *big.Int {
 	h1.Sub(h1, big.NewInt(1))
 	return _pow(a, h1, n)
 }
+
+func _rev2(a, p, q *big.Int) *big.Int {
+	n := big.NewInt(0).Mul(p, q)
+	nn := _square(n)
+
+	h1 := big.NewInt(0).Sub(nn, p)
+	h2 := big.NewInt(0).Sub(nn, q)
+
+	h1.Mul(h1, h2)
+	h1.Sub(h1, big.NewInt(1))
+
+	return _pow(a, h1, nn)
+}

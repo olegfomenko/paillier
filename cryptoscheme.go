@@ -37,6 +37,12 @@ type PaillierScheme interface {
 	GenKeypair() (*PublicKey, *PrivateKey)
 
 	SetInitialPrimes(p int64, q int64)
+
+	Add(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue
+
+	Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue
+
+	Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue
 }
 
 type paillier struct {
@@ -76,12 +82,18 @@ func GetNewInstance() PaillierScheme {
 	return &paillier{big.NewInt(defaultP), big.NewInt(defaultQ)}
 }
 
-func Add(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
+func (p *paillier) Add(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
 	nn := _square(key.n)
 	return &PublicValue{Val: _bigMul(a.Val, b.Val, nn)}
 }
 
-func Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue {
+func (p *paillier) Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue {
 	nn := _square(key.n)
 	return &PublicValue{Val: _pow(a.Val, b, nn)}
+}
+
+func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
+	nn := _square(key.n)
+	revB := _rev2(b.Val, p.P, p.Q)
+	return &PublicValue{Val: _bigMul(a.Val, revB, nn)}
 }

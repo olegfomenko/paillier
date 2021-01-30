@@ -20,11 +20,14 @@ func Test() {
 	fmt.Println("Encrypted data 102:", s2)
 	fmt.Println("Decrypted data 102:", scheme.Decode(private, s2).Val.Int64())
 
-	s := Add(s1, s2, public)
+	s := scheme.Add(s1, s2, public)
 	fmt.Println("Decrypted sum:", scheme.Decode(private, s).Val.Int64())
 
-	ss := Mul(s1, big.NewInt(100), public)
+	ss := scheme.Mul(s1, big.NewInt(100), public)
 	fmt.Println("Mul on unencrypted val", scheme.Decode(private, ss).Val.Int64())
+
+	sss := scheme.Sub(s2, s1, public)
+	fmt.Println("Decrypted sub:", scheme.Decode(private, sss).Val.Int64())
 
 	fmt.Println("--------Paillier test end--------\n\n\n")
 }
