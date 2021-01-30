@@ -80,3 +80,8 @@ func Add(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
 	nn := _square(key.n)
 	return &PublicValue{Val: _bigMul(a.Val, b.Val, nn)}
 }
+
+func Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue {
+	nn := _square(key.n)
+	return &PublicValue{Val: _pow(a.Val, b, nn)}
+}

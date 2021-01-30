@@ -5,7 +5,7 @@ import (
 	"math/big"
 )
 
-func test()  {
+func Test() {
 	fmt.Println("\n--------Paillier test--------")
 
 	scheme := GetNewInstance()
@@ -22,6 +22,9 @@ func test()  {
 
 	s := Add(s1, s2, public)
 	fmt.Println("Decrypted sum:", scheme.Decode(private, s).Val.Int64())
+
+	ss := Mul(s1, big.NewInt(100), public)
+	fmt.Println("Mul on unencrypted val", scheme.Decode(private, ss).Val.Int64())
 
 	fmt.Println("--------Paillier test end--------\n\n\n")
 }
