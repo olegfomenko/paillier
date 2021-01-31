@@ -43,6 +43,10 @@ type PaillierScheme interface {
 	Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue
 
 	Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue
+
+	GetQ() int64
+
+	GetP() int64
 }
 
 type paillier struct {
@@ -96,4 +100,12 @@ func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicVa
 	nn := _square(key.n)
 	revB := _rev2(b.Val, p.P, p.Q)
 	return &PublicValue{Val: _bigMul(a.Val, revB, nn)}
+}
+
+func (p *paillier) GetQ() int64 {
+	return p.Q.Int64()
+}
+
+func (p *paillier) GetP() int64 {
+	return p.P.Int64()
 }
