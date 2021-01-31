@@ -30,9 +30,9 @@ type PrivateValue struct {
 }
 
 type PaillierScheme interface {
-	Encode(key *PublicKey, m *PrivateValue) *PublicValue
+	Encrypt(key *PublicKey, m *PrivateValue) *PublicValue
 
-	Decode(key *PrivateKey, c *PublicValue) *PrivateValue
+	Decrypt(key *PrivateKey, c *PublicValue) *PrivateValue
 
 	GenKeypair() (*PublicKey, *PrivateKey)
 
@@ -62,7 +62,7 @@ func (p *paillier) GenKeypair() (*PublicKey, *PrivateKey) {
 	return &PublicKey{n, g}, &PrivateKey{n, l, u}
 }
 
-func (p *paillier) Encode(key *PublicKey, m *PrivateValue) *PublicValue {
+func (p *paillier) Encrypt(key *PublicKey, m *PrivateValue) *PublicValue {
 	nn := _square(key.n)
 	r := big.NewInt(rand.Int63n(p.P.Int64()))
 	s1 := _pow(key.g, m.Val, nn)
@@ -70,7 +70,7 @@ func (p *paillier) Encode(key *PublicKey, m *PrivateValue) *PublicValue {
 	return &PublicValue{_bigMul(s1, s2, nn)}
 }
 
-func (p *paillier) Decode(key *PrivateKey, c *PublicValue) *PrivateValue {
+func (p *paillier) Decrypt(key *PrivateKey, c *PublicValue) *PrivateValue {
 	nn := _square(key.n)
 	h := _pow(c.Val, key.l, nn)
 	hL := _l(h, key.n)
