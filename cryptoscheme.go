@@ -1,6 +1,7 @@
 package paillier
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 )
@@ -87,6 +88,8 @@ func (p *paillier) SafeEncrypt(public *PublicKey, private *PrivateKey, m *Privat
 
 		if p.Check(private, c, m) {
 			return c
+		} else {
+			fmt.Println("Try #", i, "failed")
 		}
 	}
 }
