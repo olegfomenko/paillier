@@ -34,6 +34,10 @@ type PaillierScheme interface {
 
 	Decrypt(key *PrivateKey, c *PublicValue) *PrivateValue
 
+	SafeEncrypt(public *PublicKey, private *PrivateKey, m *PrivateValue) *PublicValue
+
+	Check(key *PrivateKey, c *PublicValue, val *PrivateValue) bool
+
 	GenKeypair() (*PublicKey, *PrivateKey)
 
 	SetInitialPrimes(p int64, q int64)
@@ -77,6 +81,20 @@ func (p *paillier) Decrypt(key *PrivateKey, c *PublicValue) *PrivateValue {
 	return &PrivateValue{_bigMul(hL, key.u, key.n)}
 }
 
+func (p *paillier) SafeEncrypt(public *PublicKey, private *PrivateKey, m *PrivateValue) *PublicValue {
+	for i := 1; ; i++ {
+		c := p.Encrypt(public, m)
+
+		if p.Check(private, c, m) {
+			return c
+		}
+	}
+}
+
+func (p *paillier) Check(key *PrivateKey, c *PublicValue, val *PrivateValue) bool {
+	return p.Decrypt(key, c).Val.Cmp(val.Val) == 0
+}
+
 func (p *paillier) SetInitialPrimes(P int64, Q int64) {
 	p.P = big.NewInt(P)
 	p.Q = big.NewInt(Q)
@@ -96,6 +114,7 @@ func (p *paillier) Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue 
 	return &PublicValue{Val: _pow(a.Val, b, nn)}
 }
 
+// TODO add error for defining _rev operation fault
 func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
 	nn := _square(key.n)
 	revB := _rev(b.Val, nn)

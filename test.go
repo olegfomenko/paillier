@@ -32,9 +32,9 @@ func Test() {
 
 	var cnt = 0
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		val := rand.Int63n(scheme.GetP())
-		enc := scheme.Encrypt(public, &PrivateValue{Val: big.NewInt(val)})
+		enc := scheme.SafeEncrypt(public, private, &PrivateValue{Val: big.NewInt(val)})
 		dec := scheme.Decrypt(private, enc).Val.Int64()
 
 		if dec != val {
