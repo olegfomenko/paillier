@@ -58,7 +58,7 @@ func (p *paillier) GenKeypair() (*PublicKey, *PrivateKey) {
 	n := big.NewInt(0).Mul(p.P, p.Q)
 	g := big.NewInt(rand.Int63n(p.P.Int64()))
 	l := _lcm(_dec(p.P), _dec(p.Q))
-	u := _rev(_l(_pow(g, l, _square(n)), n), p.P, p.Q)
+	u := _rev(_l(_pow(g, l, _square(n)), n), n)
 	return &PublicKey{n, g}, &PrivateKey{n, l, u}
 }
 
@@ -98,7 +98,7 @@ func (p *paillier) Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue 
 
 func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
 	nn := _square(key.n)
-	revB := _rev2(b.Val, p.P, p.Q)
+	revB := _rev(b.Val, nn)
 	return &PublicValue{Val: _bigMul(a.Val, revB, nn)}
 }
 

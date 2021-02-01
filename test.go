@@ -3,6 +3,7 @@ package paillier
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
 )
 
 func Test() {
@@ -28,6 +29,21 @@ func Test() {
 
 	sss := scheme.Sub(s2, s1, public)
 	fmt.Println("Decrypted sub:", scheme.Decrypt(private, sss).Val.Int64())
+
+	var cnt = 0
+
+	for i := 0; i < 100; i++ {
+		val := rand.Int63n(scheme.GetP())
+		enc := scheme.Encrypt(public, &PrivateValue{Val: big.NewInt(val)})
+		dec := scheme.Decrypt(private, enc).Val.Int64()
+
+		if dec != val {
+			cnt++
+			fmt.Println(val, dec, enc)
+		}
+	}
+
+	fmt.Println(cnt)
 
 	fmt.Println("--------Paillier test end--------\n\n\n")
 }

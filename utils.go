@@ -1,6 +1,9 @@
 package paillier
 
-import "math/big"
+import (
+	"fmt"
+	"math/big"
+)
 
 func _equals(a *big.Int, b int64) bool {
 	return a.Cmp(big.NewInt(b)) == 0
@@ -12,30 +15,11 @@ func _bigMul(a, b, mod *big.Int) *big.Int {
 }
 
 func _pow(a, step, mod *big.Int) *big.Int {
-	a = big.NewInt(0).Mod(a, mod)
-
-	if _equals(step, 0) {
-		return big.NewInt(1)
-	} else if _equals(step, 1) {
-		return a
-	}
-
-	h := _pow(_bigMul(a, a, mod), big.NewInt(0).Div(step, big.NewInt(2)), mod)
-	flag := big.NewInt(0).Mod(step, big.NewInt(2))
-
-	if _equals(flag, 0) {
-		return h
-	} else {
-		return _bigMul(h, a, mod)
-	}
+	return big.NewInt(0).Exp(a, step, mod)
 }
 
 func _gcd(a, b *big.Int) *big.Int {
-	if b.Cmp(big.NewInt(0)) == 0 {
-		return a
-	} else {
-		return _gcd(b, big.NewInt(0).Mod(a, b))
-	}
+	return big.NewInt(0).GCD(nil, nil, a, b)
 }
 
 func _lcm(a, b *big.Int) *big.Int {
@@ -48,33 +32,25 @@ func _dec(a *big.Int) *big.Int {
 	return big.NewInt(0).Sub(a, big.NewInt(1))
 }
 
+func _inc(a *big.Int) *big.Int {
+	return big.NewInt(0).Add(a, big.NewInt(1))
+}
+
 func _square(a *big.Int) *big.Int {
 	return big.NewInt(0).Mul(a, a)
 }
 
 func _l(u, n *big.Int) *big.Int {
+	if !_equals(big.NewInt(0).Mod(u, n), 1) {
+		nn := _square(n)
+		u = big.NewInt(0).Add(u, nn)
+		fmt.Println(big.NewInt(0).Mod(u, n))
+	}
+
 	h1 := _dec(u)
 	return h1.Div(h1, n)
 }
 
-func _rev(a, p, q *big.Int) *big.Int {
-	n := big.NewInt(0).Mul(p, q)
-	h1 := big.NewInt(0).Sub(n, p)
-	h2 := big.NewInt(0).Sub(n, q)
-	h1.Mul(h1, h2)
-	h1.Sub(h1, big.NewInt(1))
-	return _pow(a, h1, n)
-}
-
-func _rev2(a, p, q *big.Int) *big.Int {
-	n := big.NewInt(0).Mul(p, q)
-	nn := _square(n)
-
-	h1 := big.NewInt(0).Sub(nn, p)
-	h2 := big.NewInt(0).Sub(nn, q)
-
-	h1.Mul(h1, h2)
-	h1.Sub(h1, big.NewInt(1))
-
-	return _pow(a, h1, nn)
+func _rev(a, n *big.Int) *big.Int {
+	return big.NewInt(0).ModInverse(a, n)
 }
