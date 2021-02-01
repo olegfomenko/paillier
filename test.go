@@ -27,7 +27,7 @@ func Test() {
 	ss := scheme.Mul(s1, big.NewInt(100), public)
 	fmt.Println("Mul on unencrypted val", scheme.Decrypt(private, ss).Val.Int64())
 
-	sss := scheme.Sub(s2, s1, public)
+	sss, _ := scheme.Sub(s2, s1, public)
 	fmt.Println("Decrypted sub:", scheme.Decrypt(private, sss).Val.Int64())
 
 	var cnt = 0

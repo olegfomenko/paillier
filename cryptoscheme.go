@@ -30,6 +30,13 @@ type PrivateValue struct {
 	Val *big.Int
 }
 
+type InverseError struct {
+}
+
+func (e InverseError) Error() string {
+	return "Mod inverse error!"
+}
+
 type PaillierScheme interface {
 	Encrypt(key *PublicKey, m *PrivateValue) *PublicValue
 
@@ -47,7 +54,7 @@ type PaillierScheme interface {
 
 	Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue
 
-	Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue
+	Sub(a *PublicValue, b *PublicValue, key *PublicKey) (*PublicValue, error)
 
 	GetQ() int64
 
@@ -63,7 +70,7 @@ func (p *paillier) GenKeypair() (*PublicKey, *PrivateKey) {
 	n := big.NewInt(0).Mul(p.P, p.Q)
 	g := big.NewInt(rand.Int63n(p.P.Int64()))
 	l := _lcm(_dec(p.P), _dec(p.Q))
-	u := _rev(_l(_pow(g, l, _square(n)), n), n)
+	u, _ := _rev(_l(_pow(g, l, _square(n)), n), n)
 	return &PublicKey{n, g}, &PrivateKey{n, l, u}
 }
 
@@ -119,11 +126,15 @@ func (p *paillier) Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue 
 	return &PublicValue{Val: _pow(a.Val, b, nn)}
 }
 
-// TODO add error for defining _rev operation fault
-func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
+func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) (*PublicValue, error) {
 	nn := _square(key.n)
-	revB := _rev(b.Val, nn)
-	return &PublicValue{Val: _bigMul(a.Val, revB, nn)}
+	revB, err := _rev(b.Val, nn)
+
+	if err != nil {
+		return nil, err
+	} else {
+		return &PublicValue{Val: _bigMul(a.Val, revB, nn)}, nil
+	}
 }
 
 func (p *paillier) GetQ() int64 {

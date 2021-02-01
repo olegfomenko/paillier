@@ -1,6 +1,7 @@
 package paillier
 
 import (
+	"fmt"
 	"math/big"
 )
 
@@ -47,6 +48,13 @@ func _l(u, n *big.Int) *big.Int {
 	return h1.Div(h1, n)
 }
 
-func _rev(a, n *big.Int) *big.Int {
-	return big.NewInt(0).ModInverse(a, n)
+func _rev(a, n *big.Int) (*big.Int, error) {
+	result := big.NewInt(0).ModInverse(a, n)
+
+	if result == nil {
+		fmt.Println("Mod Inverse operation error!")
+		return nil, InverseError{}
+	} else {
+		return result, nil
+	}
 }
