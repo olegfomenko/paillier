@@ -1,7 +1,6 @@
 package paillier
 
 import (
-	"fmt"
 	"math/big"
 )
 
@@ -41,12 +40,9 @@ func _square(a *big.Int) *big.Int {
 }
 
 func _l(u, n *big.Int) *big.Int {
-	if !_equals(big.NewInt(0).Mod(u, n), 1) {
-		nn := _square(n)
-		u = big.NewInt(0).Add(u, nn)
-		fmt.Println(big.NewInt(0).Mod(u, n))
-	}
-
+	/*if !_equals(big.NewInt(0).Mod(u, n), 1) {
+		panic("division error")
+	}*/
 	h1 := _dec(u)
 	return h1.Div(h1, n)
 }
