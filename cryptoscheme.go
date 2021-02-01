@@ -83,7 +83,7 @@ func (p *paillier) Decrypt(key *PrivateKey, c *PublicValue) *PrivateValue {
 }
 
 func (p *paillier) SafeEncrypt(public *PublicKey, private *PrivateKey, m *PrivateValue) *PublicValue {
-	for i := 1; ; i++ {
+	for i := 1; i < 10; i++ {
 		c := p.Encrypt(public, m)
 
 		if p.Check(private, c, m) {
@@ -92,6 +92,8 @@ func (p *paillier) SafeEncrypt(public *PublicKey, private *PrivateKey, m *Privat
 			fmt.Println("Try #", i, "failed")
 		}
 	}
+
+	return nil
 }
 
 func (p *paillier) Check(key *PrivateKey, c *PublicValue, val *PrivateValue) bool {
