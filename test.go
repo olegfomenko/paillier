@@ -10,32 +10,31 @@ func Test() {
 	fmt.Println("\n--------Paillier test--------")
 
 	scheme := GetNewInstance()
-	public, private := scheme.GenKeypair()
-	fmt.Println("Private / Public keys:", public, private)
+	privateKey := scheme.GenKeypair()
 
-	s1 := scheme.Encrypt(public, &PrivateValue{Val: big.NewInt(102)})
+	s1 := scheme.Encrypt(privateKey.PublicKey, &PrivateValue{Val: big.NewInt(102)})
 	fmt.Println("Encrypted data 102:", s1)
-	fmt.Println("Decrypted data 102:", scheme.Decrypt(private, s1).Val.Int64())
+	fmt.Println("Decrypted data 102:", scheme.Decrypt(privateKey, s1).Val.Int64())
 
-	s2 := scheme.Encrypt(public, &PrivateValue{Val: big.NewInt(200)})
+	s2 := scheme.Encrypt(privateKey.PublicKey, &PrivateValue{Val: big.NewInt(200)})
 	fmt.Println("Encrypted data 102:", s2)
-	fmt.Println("Decrypted data 102:", scheme.Decrypt(private, s2).Val.Int64())
+	fmt.Println("Decrypted data 102:", scheme.Decrypt(privateKey, s2).Val.Int64())
 
-	s := scheme.Add(s1, s2, public)
-	fmt.Println("Decrypted sum:", scheme.Decrypt(private, s).Val.Int64())
+	s := scheme.Add(s1, s2, privateKey.PublicKey)
+	fmt.Println("Decrypted sum:", scheme.Decrypt(privateKey, s).Val.Int64())
 
-	ss := scheme.Mul(s1, big.NewInt(100), public)
-	fmt.Println("Mul on unencrypted val", scheme.Decrypt(private, ss).Val.Int64())
+	ss := scheme.Mul(s1, big.NewInt(100), privateKey.PublicKey)
+	fmt.Println("Mul on unencrypted val", scheme.Decrypt(privateKey, ss).Val.Int64())
 
-	sss, _ := scheme.Sub(s2, s1, public)
-	fmt.Println("Decrypted sub:", scheme.Decrypt(private, sss).Val.Int64())
+	sss := scheme.Sub(s2, s1, privateKey.PublicKey)
+	fmt.Println("Decrypted sub:", scheme.Decrypt(privateKey, sss).Val.Int64())
 
 	var cnt = 0
 
 	for i := 0; i < 1000; i++ {
-		val := rand.Int63n(scheme.GetP())
-		enc := scheme.SafeEncrypt(public, private, &PrivateValue{Val: big.NewInt(val)})
-		dec := scheme.Decrypt(private, enc).Val.Int64()
+		val := rand.Int63()
+		enc := scheme.Encrypt(privateKey.PublicKey, &PrivateValue{Val: big.NewInt(val)})
+		dec := scheme.Decrypt(privateKey, enc).Val.Int64()
 
 		if dec != val {
 			cnt++

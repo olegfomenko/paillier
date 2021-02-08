@@ -1,25 +1,22 @@
 package paillier
 
 import (
-	"fmt"
+	"crypto/rand"
 	"math/big"
-	"math/rand"
 )
 
-const (
-	defaultP int64 = 1_000_000_007
-	defaultQ int64 = 41
-)
+const defaultKeySize int = 128
 
 type PublicKey struct {
-	n *big.Int
-	g *big.Int
+	n  *big.Int
+	nn *big.Int
+	g  *big.Int
 }
 
 type PrivateKey struct {
-	n *big.Int
-	l *big.Int
-	u *big.Int
+	PublicKey *PublicKey
+	h         *big.Int
+	u         *big.Int
 }
 
 type PublicValue struct {
@@ -42,23 +39,13 @@ type PaillierScheme interface {
 
 	Decrypt(key *PrivateKey, c *PublicValue) *PrivateValue
 
-	SafeEncrypt(public *PublicKey, private *PrivateKey, m *PrivateValue) *PublicValue
-
-	Check(key *PrivateKey, c *PublicValue, val *PrivateValue) bool
-
-	GenKeypair() (*PublicKey, *PrivateKey)
-
-	SetInitialPrimes(p int64, q int64)
+	GenKeypair() *PrivateKey
 
 	Add(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue
 
 	Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue
 
-	Sub(a *PublicValue, b *PublicValue, key *PublicKey) (*PublicValue, error)
-
-	GetQ() int64
-
-	GetP() int64
+	Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue
 }
 
 type paillier struct {
@@ -66,81 +53,76 @@ type paillier struct {
 	Q *big.Int
 }
 
-func (p *paillier) GenKeypair() (*PublicKey, *PrivateKey) {
-	n := big.NewInt(0).Mul(p.P, p.Q)
-	g := big.NewInt(rand.Int63n(p.P.Int64()))
-	l := _lcm(_dec(p.P), _dec(p.Q))
-	u, _ := _rev(_l(_pow(g, l, _square(n)), n), n)
-	return &PublicKey{n, g}, &PrivateKey{n, l, u}
+func (p *paillier) GenKeypair() *PrivateKey {
+	n := new(big.Int).Mul(p.P, p.Q)
+	nn := square(n)
+	g := inc(n)
+
+	h := lcm(dec(p.P), dec(p.Q))
+	u, err := rev(l(pow(g, h, nn), n), n)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return &PrivateKey{
+		PublicKey: &PublicKey{
+			n:  n,
+			nn: nn,
+			g:  g,
+		},
+		h: h,
+		u: u,
+	}
 }
 
 func (p *paillier) Encrypt(key *PublicKey, m *PrivateValue) *PublicValue {
-	nn := _square(key.n)
-	r := big.NewInt(rand.Int63n(p.P.Int64()))
-	s1 := _pow(key.g, m.Val, nn)
-	s2 := _pow(r, key.n, nn)
-	return &PublicValue{_bigMul(s1, s2, nn)}
+	r, err := rand.Int(rand.Reader, key.n)
+	if err != nil {
+		panic(err)
+	}
+
+	s1 := pow(key.g, m.Val, key.nn)
+	s2 := pow(r, key.n, key.nn)
+	return &PublicValue{bigMul(s1, s2, key.nn)}
 }
 
 func (p *paillier) Decrypt(key *PrivateKey, c *PublicValue) *PrivateValue {
-	nn := _square(key.n)
-	h := _pow(c.Val, key.l, nn)
-	hL := _l(h, key.n)
-	return &PrivateValue{_bigMul(hL, key.u, key.n)}
-}
-
-func (p *paillier) SafeEncrypt(public *PublicKey, private *PrivateKey, m *PrivateValue) *PublicValue {
-	for i := 1; i < 10; i++ {
-		c := p.Encrypt(public, m)
-
-		if p.Check(private, c, m) {
-			return c
-		} else {
-			fmt.Println("Try #", i, "failed")
-		}
-	}
-
-	return nil
-}
-
-func (p *paillier) Check(key *PrivateKey, c *PublicValue, val *PrivateValue) bool {
-	return p.Decrypt(key, c).Val.Cmp(val.Val) == 0
-}
-
-func (p *paillier) SetInitialPrimes(P int64, Q int64) {
-	p.P = big.NewInt(P)
-	p.Q = big.NewInt(Q)
-}
-
-func GetNewInstance() PaillierScheme {
-	return &paillier{big.NewInt(defaultP), big.NewInt(defaultQ)}
+	ch := pow(c.Val, key.h, key.PublicKey.nn)
+	lVal := l(ch, key.PublicKey.n)
+	return &PrivateValue{bigMul(lVal, key.u, key.PublicKey.n)}
 }
 
 func (p *paillier) Add(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
-	nn := _square(key.n)
-	return &PublicValue{Val: _bigMul(a.Val, b.Val, nn)}
+	return &PublicValue{Val: bigMul(a.Val, b.Val, key.nn)}
 }
 
 func (p *paillier) Mul(a *PublicValue, b *big.Int, key *PublicKey) *PublicValue {
-	nn := _square(key.n)
-	return &PublicValue{Val: _pow(a.Val, b, nn)}
+	return &PublicValue{Val: pow(a.Val, b, key.nn)}
 }
 
-func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) (*PublicValue, error) {
-	nn := _square(key.n)
-	revB, err := _rev(b.Val, nn)
-
+func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicValue {
+	revB, err := rev(b.Val, key.nn)
 	if err != nil {
-		return nil, err
-	} else {
-		return &PublicValue{Val: _bigMul(a.Val, revB, nn)}, nil
+		panic(err)
 	}
+
+	return &PublicValue{Val: bigMul(a.Val, revB, key.nn)}
 }
 
-func (p *paillier) GetQ() int64 {
-	return p.Q.Int64()
-}
+func GetNewInstance() PaillierScheme {
+	var instance = paillier{}
 
-func (p *paillier) GetP() int64 {
-	return p.P.Int64()
+	p, err := rand.Prime(rand.Reader, defaultKeySize)
+	if err != nil {
+		panic(err)
+	}
+
+	q, err := rand.Prime(rand.Reader, defaultKeySize)
+	if err != nil {
+		panic(err)
+	}
+
+	instance.P, instance.Q = p, q
+	return &instance
 }
