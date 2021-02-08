@@ -10,25 +10,25 @@ Also, we can get multiplication of encrypted value m1 on unencrypted m2. More in
 
 # Example of usage
 
-###Import:
+### Import:
 ```go
 import "github.com/olegfomenko/paillier"
 ```
 
-###Crating keys:
+### Crating keys:
 ```go
 scheme := paillier.GetInstance(rand.Reader, 128)
 privateKey := scheme.GenKeypair()
 publicKey := privateKey.PublicKey
 ```
 
-###Encryption/Decryption:
+### Encryption/Decryption:
 ```go
 encVal := scheme.Encrypt(publicKey, &PrivateValue{Val: big.NewInt(10000)})
 decVal := scheme.Decrypt(privateKey, encVal).Val // equals to big int 10000
 ```
 
-###Operations:
+### Operations:
 ```go
 var s1, s1 *paillier.PublicValue // Encrypted values
 
