@@ -2,6 +2,7 @@ package paillier
 
 import (
 	"crypto/rand"
+	"io"
 	"math/big"
 )
 
@@ -49,8 +50,9 @@ type PaillierScheme interface {
 }
 
 type paillier struct {
-	P *big.Int
-	Q *big.Int
+	P            *big.Int
+	Q            *big.Int
+	randomReader io.Reader
 }
 
 func (p *paillier) GenKeypair() *PrivateKey {
@@ -77,7 +79,7 @@ func (p *paillier) GenKeypair() *PrivateKey {
 }
 
 func (p *paillier) Encrypt(key *PublicKey, m *PrivateValue) *PublicValue {
-	r, err := rand.Int(rand.Reader, key.n)
+	r, err := rand.Int(p.randomReader, key.n)
 	if err != nil {
 		panic(err)
 	}
@@ -110,8 +112,8 @@ func (p *paillier) Sub(a *PublicValue, b *PublicValue, key *PublicKey) *PublicVa
 	return &PublicValue{Val: bigMul(a.Val, revB, key.nn)}
 }
 
-func GetNewInstance() PaillierScheme {
-	var instance = paillier{}
+func GetDefaultInstance() PaillierScheme {
+	var instance = paillier{randomReader: rand.Reader}
 
 	p, err := rand.Prime(rand.Reader, defaultKeySize)
 	if err != nil {
@@ -119,6 +121,23 @@ func GetNewInstance() PaillierScheme {
 	}
 
 	q, err := rand.Prime(rand.Reader, defaultKeySize)
+	if err != nil {
+		panic(err)
+	}
+
+	instance.P, instance.Q = p, q
+	return &instance
+}
+
+func GetInstance(random io.Reader, keySize int) PaillierScheme {
+	var instance = paillier{randomReader: random}
+
+	p, err := rand.Prime(random, keySize)
+	if err != nil {
+		panic(err)
+	}
+
+	q, err := rand.Prime(random, keySize)
 	if err != nil {
 		panic(err)
 	}

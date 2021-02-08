@@ -1,15 +1,15 @@
 package paillier
 
 import (
+	"crypto/rand"
 	"fmt"
 	"math/big"
-	"math/rand"
 )
 
 func Test() {
 	fmt.Println("\n--------Paillier test--------")
 
-	scheme := GetNewInstance()
+	scheme := GetInstance(rand.Reader, 128)
 	privateKey := scheme.GenKeypair()
 
 	s1 := scheme.Encrypt(privateKey.PublicKey, &PrivateValue{Val: big.NewInt(102)})
@@ -32,11 +32,11 @@ func Test() {
 	var cnt = 0
 
 	for i := 0; i < 1000; i++ {
-		val := rand.Int63()
-		enc := scheme.Encrypt(privateKey.PublicKey, &PrivateValue{Val: big.NewInt(val)})
-		dec := scheme.Decrypt(privateKey, enc).Val.Int64()
+		val, _ := rand.Int(rand.Reader, big.NewInt(1000000000))
+		enc := scheme.Encrypt(privateKey.PublicKey, &PrivateValue{Val: val})
+		dec := scheme.Decrypt(privateKey, enc).Val
 
-		if dec != val {
+		if val.Cmp(dec) != 0 {
 			cnt++
 			fmt.Println(val, dec, enc)
 		}
